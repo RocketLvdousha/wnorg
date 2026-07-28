@@ -1,0 +1,47 @@
+# Prisma 迁移 Job
+#  - 用同一份镜像，跑到 web 同一个 namespace
+#  - 等 Postgres 就绪后再跑（initContainer / Job 重试）
+#  - 部署流程：CI build & push 后，手动 kubectl create job 或交 CI 触发
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: woning-migrate
+  namespace: ns-os8fj70c
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app: woning
+        job: migrate
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: ghcr-pull
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+      containers:
+        - name: migrate
+          image: ghcr.io/rocketlvdousha/woning-web:latest
+          command: ["node", "node_modules/prisma/build/index.js", "migrate", "deploy"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: woning-secret
+                  key: DATABASE_URL
+            - name: NODE_ENV
+              value: production
+            - name: TMPDIR
+              value: /tmp
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "256Mi"
+              ephemeral-storage: "500Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+              ephemeral-storage: "1Gi"

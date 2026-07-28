@@ -1,0 +1,90 @@
+name: build-and-deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/woning-web
+  # 替换成你的 GHCR 镜像所在的 owner（若与 repo owner 不一致）
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+  migrate:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+      - name: Render & apply manifests
+        uses: actions/checkout@v4
+      - name: Apply
+        run: |
+          # 把镜像 tag 注入到 web-deployment.yaml
+          sed -i "s#ghcr.io/<owner>/woning-web:latest#${{ env.IMAGE_NAME }}:${{ github.sha }}#" k8s/web-deployment.yaml k8s/jobs/migrate-job.yaml k8s/jobs/seed-job.yaml
+
+          # 用 kubeconfig 部署
+          echo "${{ secrets.KUBECONFIG }}" > /tmp/kubeconfig
+          export KUBECONFIG=/tmp/kubeconfig
+
+          # 应用基础资源（已存在的会被合并更新）
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/configmap.yaml
+          # secret 需要在 Secrets 页面单独管；这里仅在 CI 没拿到时跳过
+          if [ -n "${{ secrets.WONING_SECRET }}" ]; then
+            echo "${{ secrets.WONING_SECRET }}" | kubectl apply -f -
+          fi
+          kubectl apply -f k8s/postgres-pvc.yaml
+          kubectl apply -f k8s/postgres-statefulset.yaml
+          kubectl apply -f k8s/uploads-pvc.yaml
+          kubectl apply -f k8s/web-service.yaml
+          kubectl apply -f k8s/web-ingress.yaml
+          kubectl apply -f k8s/web-deployment.yaml
+
+          # 等 Postgres ready
+          kubectl rollout status statefulset/postgres -n ns-woning --timeout=120s
+
+          # 跑迁移
+          kubectl apply -f k8s/jobs/migrate-job.yaml
+          kubectl wait --for=condition=complete job/woning-migrate -n ns-woning --timeout=180s
+
+          # 等 web ready
+          kubectl rollout status deployment/woning-web -n ns-woning --timeout=180s
+
+      - name: Smoke
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" > /tmp/kubeconfig
+          export KUBECONFIG=/tmp/kubeconfig
+          sleep 10
+          curl -fsS https://woning.example.com || echo "ingress not ready yet"

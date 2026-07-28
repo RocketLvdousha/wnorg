@@ -1,0 +1,230 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f5f1ea;
+  --bg-soft: #ede7dc;
+  --ink: #0a1929;
+  --ink-soft: #1b3a57;
+  --forest: #4a5d3d;
+  --forest-deep: #2d3b23;
+  --gold: #b8956a;
+  --charcoal: #2a2a2a;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+html,
+body {
+  background-color: var(--bg);
+  color: var(--charcoal);
+  font-feature-settings: "kern", "liga", "calt";
+}
+
+/* 中文标题：宋体主导 */
+.cn-display {
+  font-family: "Source Han Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* 英文衬线：财富/资产意象 */
+.en-serif {
+  font-family: var(--font-cormorant), "Cormorant Garamond", "Times New Roman", serif;
+  font-feature-settings: "lnum", "kern";
+}
+
+/* 数据/代码：等宽 */
+.en-mono {
+  font-family: var(--font-jetbrains), "JetBrains Mono", "SF Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 章节序号小字（克制使用） */
+.eyebrow {
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #4a5d3d;
+}
+
+/* 金色细线分隔 */
+.gold-rule {
+  display: inline-block;
+  width: 32px;
+  height: 1px;
+  background-color: #b8956a;
+  vertical-align: middle;
+}
+
+.gold-rule-long {
+  display: block;
+  width: 80px;
+  height: 1px;
+  background: linear-gradient(90deg, #b8956a 0%, rgba(184, 149, 106, 0) 100%);
+}
+
+/* 森林色细线（生命科学区与 Hero 装饰用） */
+.forest-rule {
+  display: inline-block;
+  width: 32px;
+  height: 1px;
+  background-color: #4a5d3d;
+  vertical-align: middle;
+}
+
+/* 精细边框（克制的金属感） */
+.hairline {
+  border: 1px solid rgba(184, 149, 106, 0.35);
+}
+
+.hairline-ink {
+  border: 1px solid rgba(10, 25, 41, 0.12);
+}
+
+.hairline-forest {
+  border: 1px solid rgba(74, 93, 61, 0.25);
+}
+
+/* ========== 质感层（核心：把"森林卧室"做成可触摸的材质） ========== */
+
+/* 亚麻纹理（重叠的基础底色），极轻 */
+.linen {
+  background-image: repeating-linear-gradient(
+      45deg,
+      rgba(45, 59, 35, 0.018) 0px,
+      rgba(45, 59, 35, 0.018) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(45, 59, 35, 0.012) 0px,
+      rgba(45, 59, 35, 0.012) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+}
+
+/* 纸张噪点 */
+.paper-grain {
+  position: relative;
+}
+.paper-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+/* 木纹（同心圆年轮感） */
+.wood-grain {
+  background-image: repeating-radial-gradient(
+      ellipse at 30% 50%,
+      rgba(45, 59, 35, 0.04) 0px,
+      rgba(45, 59, 35, 0.04) 1px,
+      transparent 1px,
+      transparent 9px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(45, 59, 35, 0.02) 0px,
+      rgba(45, 59, 35, 0.02) 1px,
+      transparent 1px,
+      transparent 28px
+    );
+}
+
+/* 树荫（柔和的顶部阴影） */
+.canopy-shadow {
+  background-image: radial-gradient(
+    ellipse at top,
+    rgba(45, 59, 35, 0.08) 0%,
+    transparent 55%
+  );
+}
+.canopy-shadow-dark {
+  background-image: radial-gradient(
+    ellipse at top,
+    rgba(20, 27, 15, 0.35) 0%,
+    transparent 70%
+  );
+}
+
+/* 滚动条克制化 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(45, 59, 35, 0.18);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(45, 59, 35, 0.32);
+}
+
+/* 选中样式 */
+::selection {
+  background: rgba(184, 149, 106, 0.25);
+  color: #0a1929;
+}
+
+/* 链接基础样式 */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 微动：呼吸感的节点 */
+@keyframes node-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+.node-pulse {
+  animation: node-pulse 3s ease-in-out infinite;
+}
+
+/* 微风轻拂的叶（用于装饰元素） */
+@keyframes breeze {
+  0%, 100% {
+    transform: translateX(0) translateY(0) rotate(0deg);
+  }
+  33% {
+    transform: translateX(2px) translateY(-3px) rotate(0.6deg);
+  }
+  66% {
+    transform: translateX(-1px) translateY(2px) rotate(-0.4deg);
+  }
+}
+
+.breeze {
+  animation: breeze 6s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* 隐藏数字输入控件 */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

@@ -1,0 +1,1 @@
+Get-NetTCPConnection -LocalPort 3000,3001,3002,3003,3004,3005,3006,3007 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { try { Stop-Process -Id $_.OwningProcess -Force -ErrorAction Stop } catch {} }; "done"

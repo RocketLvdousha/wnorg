@@ -1,0 +1,41 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+.env
+
+# prisma local db
+/prisma/dev.db
+/prisma/dev.db-journal
+
+# uploaded media (admin)
+/public/uploads/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# k8s · 真实密钥不入 git（模板 secret.example.yaml 入 git）
+/k8s/secret.yaml
+
+# devlog · 内部笔记不入 git
+/devlog

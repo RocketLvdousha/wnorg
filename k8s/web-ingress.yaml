@@ -1,0 +1,30 @@
+# Ingress — 需要集群已装 ingress-nginx / Sealos 自带 ingress controller
+#  - cert-manager 自动签发 TLS（推荐）
+#  - 没有 cert-manager 就手动创建 TLS secret 并去掉 issuer
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: woning-web
+  namespace: ns-os8fj70c
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "220m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - woning.live
+      secretName: woning-tls
+  rules:
+    - host: woning.live
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: woning-web
+                port:
+                  number: 80

@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ns-os8fj70c
+
+resources:
+  - configmap.yaml
+  - secret.example.yaml   # 替换为 secret.yaml（生产）
+  - postgres-pvc.yaml
+  - postgres-statefulset.yaml
+  - uploads-pvc.yaml
+  - web-deployment.yaml
+  - web-service.yaml
+  - web-ingress.yaml
+
+commonLabels:
+  app.kubernetes.io/name: woning
+  app.kubernetes.io/part-of: woning

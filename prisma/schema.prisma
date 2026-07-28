@@ -1,0 +1,168 @@
+// Prisma schema for 卧宁睡眠 后台管理（share 板块 / About 页 / 首页）
+// 本地开发用 SQLite；线上部署用 Postgres，只改 provider + DATABASE_URL。
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ 用户与鉴权 ============
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  role         String   @default("editor") // "admin" | "editor"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions      Session[]
+  draftsUpdated EntryDraft[]    @relation("DraftUpdatedBy")
+  versionsPublished EntryVersion[] @relation("VersionPublishedBy")
+  mediaUploaded MediaAsset[]    @relation("MediaUploadedBy")
+  auditLogs     AuditLog[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires   DateTime
+  sessionToken String @unique
+  createdAt DateTime @default(now())
+}
+
+// ============ 分享条目 ============
+// status:
+//   "draft"     草稿（编辑中，未发布）
+//   "published" 已发布（前台可见）
+//   "archived"  归档（不再前台展示，但保留历史）
+model Entry {
+  id          String   @id @default(cuid())
+  slug        String
+  category    String   // "science" | "stories" | "usage"
+  status      String   @default("draft")
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  drafts   EntryDraft[]
+  versions EntryVersion[]
+
+  @@unique([category, slug])
+  @@index([category, status])
+}
+
+// 当前正在编辑的草稿。任意时刻最多 1 条（published 状态下也会保留）
+model EntryDraft {
+  id          String   @id @default(cuid())
+  entryId     String   @unique
+  entry       Entry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  payload     String   // JSON: { title_zh, title_en, summary_zh, summary_en, body_zh, body_en, cover, tags[], author, date }
+  updatedById String
+  updatedBy   User     @relation("DraftUpdatedBy", fields: [updatedById], references: [id])
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+}
+
+// 已发布的完整快照。版本号自增；rollback 时把任意 version 复制回 draft。
+model EntryVersion {
+  id           String   @id @default(cuid())
+  entryId      String
+  entry        Entry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  version      Int
+  payload      String   // 同 EntryDraft.payload 结构
+  publishedById String
+  publishedBy   User    @relation("VersionPublishedBy", fields: [publishedById], references: [id])
+  publishedAt  DateTime @default(now())
+  note         String?  // 发布说明（可选）
+
+  @@unique([entryId, version])
+  @@index([entryId, publishedAt])
+}
+
+// 字段级审计日志
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     String   // "create" | "save_draft" | "publish" | "rollback" | "upload" | "login" | "logout"
+  targetType String?  // "entry" | "media" | "user"
+  targetId   String?
+  meta       String?  // JSON: 变更详情
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([targetType, targetId])
+}
+
+// ============ About 页内容（六大区块）============
+//
+// 设计原则：
+//  - 区块是「顺序容器」，每页 1 条，按 displayOrder 升序展示
+//  - 每个区块的 payload 由前端按 type 字段判定渲染
+//  - 单条 vs 列表（如事实墙 vs 团队）都通过 payload 内嵌数组承载
+//  - 没有走版本/草稿机制（区块内容轻量、可由 admin 实时编辑覆盖即可）
+model AboutSection {
+  id           String   @id @default(cuid())
+  /// 顺序：1=首屏英雄, 2=核心事实墙, 3=信任证据链, 4=团队真人秀, 5=解决方案承诺, 6=行动召唤
+  displayOrder Int      @unique
+  /// 区块类型（前端按此分发）：hero | facts | trust | team | promise | cta
+  type         String
+  /// 结构化内容，按 type 不同 schema 不同
+  payload      String   // JSON
+  /// 后台编辑时显示用，便于运营定位
+  title        String   // 例：「首屏英雄」「核心事实墙」
+  /// 是否在前台展示（不删数据，下架即可）
+  visible      Boolean  @default(true)
+  updatedById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([displayOrder])
+}
+
+// ============ 首页内容（产品展示 + 伴侣 + 证言 + CTA）============
+//
+// 与 AboutSection 设计思路一致：每个区块按 displayOrder 排序，
+// payload JSON 内嵌视频/图片引用列表（每个引用记录可由 admin 上传或粘贴外链）。
+model HomeSection {
+  id           String   @id @default(cuid())
+  /// 顺序：1=主产品, 2=月光宝盒, 3=证言, 4=CTA
+  displayOrder Int      @unique
+  /// 区块类型：product | companion | testimonials | cta
+  type         String
+  payload      String   // JSON
+  title        String   // 后台定位用
+  visible      Boolean  @default(true)
+  updatedById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([displayOrder])
+}
+
+// 图片 / 视频资源。本地开发存在 /public/uploads/{images|videos}/
+// path 例："/uploads/images/abc123.jpg"
+model MediaAsset {
+  id           String   @id @default(cuid())
+  filename     String   // 磁盘文件名（含扩展）
+  originalName String
+  mime         String
+  size         Int      // 字节
+  kind         String   // "image" | "video"
+  path         String   // 前台可访问的 URL 路径
+  width        Int?
+  height       Int?
+  duration     Float?   // 视频秒数（可选）
+
+  uploadedById String
+  uploadedBy   User     @relation("MediaUploadedBy", fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@index([kind, createdAt])
+}

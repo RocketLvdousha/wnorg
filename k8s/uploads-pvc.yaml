@@ -1,0 +1,20 @@
+# uploads 共享卷（admin 上传的图片 / 视频）
+#  - 多副本 web 必须用 RWX（ReadWriteMany）
+#  - Sealos 默认提供 NFS / 块存储，按平台能力选其一：
+#      * NFS（最通用，跨节点）
+#      * CephFS / Longhorn（性能更好）
+#  - 若集群没有动态 RWX 存储，临时方案：用 hostPath + nodeAffinity，
+#    并把 web 副本数限制为 1（牺牲高可用）
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: woning-uploads
+  namespace: ns-os8fj70c
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  # 动态供应：默认 storageClass；若用 NFS 显式指定：
+  # storageClassName: nfs-client

@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(rm:*)",
+      "Bash(curl:*)",
+      "Bash(ls removed:*)",
+      "Bash(timeout 8 npx next:*)",
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma:*)",
+      "Bash(timeout 90 npx next:*)",
+      "Bash(node:*)",
+      "Read(//tmp/**)",
+      "Bash(grep:*)",
+      "Bash(npm test:*)",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(f\\\\\"区块数：{len\\(d['sections']\\)}\\\\\"\\); [print\\(f\\\\\"  0{s['displayOrder']} {s['type']:8s} → {s['title']}\\\\\"\\) for s in d['sections']]\")",
+      "Bash(kill -9 7532 3784 20960 14720 2380)",
+      "Bash(/c/Windows/System32/taskkill.exe //F //PID 7532 //PID 3784 //PID 20960 //PID 14720 //PID 2380)",
+      "Bash(/c/Windows/System32/taskkill.exe //F //IM node.exe)",
+      "Bash(openssl rand *)",
+      "Bash(kubectl version *)",
+      "Bash(docker --version)",
+      "Bash(export KUBECONFIG=\"E:/config/sealosk8s/wnorg.yaml\")",
+      "Bash(kubectl get *)",
+      "Bash(kubectl auth *)",
+      "Bash(kubectl apply *)",
+      "Bash(kubectl rollout *)",
+      "Bash(docker login *)",
+      "Bash(docker build *)",
+      "Bash(docker push *)",
+      "Bash(kubectl describe *)",
+      "Bash(docker run *)",
+      "Bash(kubectl delete *)",
+      "Bash(kubectl logs *)",
+      "Bash(git init *)",
+      "Bash(git config *)"
+    ]
+  }
+}
