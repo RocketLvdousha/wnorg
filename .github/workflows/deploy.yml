@@ -55,26 +55,28 @@ jobs:
           # 用 kubeconfig 部署
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > /tmp/kubeconfig
           export KUBECONFIG=/tmp/kubeconfig
+          export KUBECTL_COMMAND_HEADERS=1
 
           # 应用基础资源（已存在的会被合并更新）
           # namespace 已存在（Sealos 分配），跳过创建
-          kubectl apply -f k8s/configmap.yaml
+          # --validate=false 跳过客户端 openapi 校验（Sealos 用户没 list 集群级资源的权限）
+          kubectl apply --validate=false -f k8s/configmap.yaml
           # secret 需要在 Secrets 页面单独管；这里仅在 CI 没拿到时跳过
           if [ -n "${{ secrets.WONING_SECRET }}" ]; then
-            echo "${{ secrets.WONING_SECRET }}" | kubectl apply -f -
+            echo "${{ secrets.WONING_SECRET }}" | kubectl apply --validate=false -f -
           fi
-          kubectl apply -f k8s/postgres-pvc.yaml
-          kubectl apply -f k8s/postgres-statefulset.yaml
-          kubectl apply -f k8s/uploads-pvc.yaml
-          kubectl apply -f k8s/web-service.yaml
-          kubectl apply -f k8s/web-ingress.yaml
-          kubectl apply -f k8s/web-deployment.yaml
+          kubectl apply --validate=false -f k8s/postgres-pvc.yaml
+          kubectl apply --validate=false -f k8s/postgres-statefulset.yaml
+          kubectl apply --validate=false -f k8s/uploads-pvc.yaml
+          kubectl apply --validate=false -f k8s/web-service.yaml
+          kubectl apply --validate=false -f k8s/web-ingress.yaml
+          kubectl apply --validate=false -f k8s/web-deployment.yaml
 
           # 等 Postgres ready
           kubectl rollout status statefulset/postgres -n ns-os8fj70c --timeout=180s
 
           # 跑迁移
-          kubectl apply -f k8s/jobs/migrate-job.yaml
+          kubectl apply --validate=false -f k8s/jobs/migrate-job.yaml
           kubectl wait --for=condition=complete job/woning-migrate -n ns-os8fj70c --timeout=300s --ignore-not-found || true
 
           # 等 web ready
@@ -85,4 +87,5 @@ jobs:
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > /tmp/kubeconfig
           export KUBECONFIG=/tmp/kubeconfig
           sleep 10
-          curl -fsS https://woning.live || echo "ingress not ready yet"
+          # curl 失败的也允许（DNS 可能没解析完）
+          curl -fsS --max-time 10 https://woning.live && echo "ingress OK" || echo "ingress not ready yet"
