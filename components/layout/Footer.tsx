@@ -91,6 +91,44 @@ export function Footer() {
         </div>
       </div>
 
+      {/* 备案信息 */}
+      <div className="border-t border-bone-100/[0.08]">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-6 py-4 text-[11px] text-bone-100/40">
+          <a
+            href="https://beian.miit.gov.cn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 transition-colors hover:text-bone-100/70"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path
+                d="M6 1L1.5 3v3.5c0 2.5 2 4.5 4.5 4.5s4.5-2 4.5-4.5V3L6 1z"
+                stroke="currentColor"
+                strokeWidth="1"
+                strokeLinejoin="round"
+              />
+            </svg>
+            粤ICP备2026087249号
+          </a>
+          <span className="text-bone-100/20">|</span>
+          <a
+            href="https://beian.mps.gov.cn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 transition-colors hover:text-bone-100/70"
+          >
+            <img
+              src="https://www.beian.gov.cn/img/new/gongan.png"
+              alt=""
+              width="14"
+              height="14"
+              className="h-3.5 w-3.5"
+            />
+            粤公网安备 44030000000000号
+          </a>
+        </div>
+      </div>
+
       {/* 国家选择 + 版权（Apple 风格） */}
       <div className="border-t border-bone-100/[0.08]">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-5 text-[11px] text-bone-100/50 md:flex-row md:items-center md:justify-between">
