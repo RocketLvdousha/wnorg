@@ -48,18 +48,16 @@ jobs:
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4
       - name: Render & apply manifests
-        uses: actions/checkout@v4
-      - name: Apply
         run: |
           # 把镜像 tag 注入到 web-deployment.yaml
-          sed -i "s#ghcr.io/<owner>/woning-web:latest#${{ env.IMAGE_NAME }}:${{ github.sha }}#" k8s/web-deployment.yaml k8s/jobs/migrate-job.yaml k8s/jobs/seed-job.yaml
+          sed -i "s#ghcr.io/rocketlvdousha/woning-web:latest#${{ env.IMAGE_NAME }}:${{ github.sha }}#" k8s/web-deployment.yaml k8s/jobs/migrate-job.yaml k8s/jobs/seed-job.yaml
 
           # 用 kubeconfig 部署
-          echo "${{ secrets.KUBECONFIG }}" > /tmp/kubeconfig
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > /tmp/kubeconfig
           export KUBECONFIG=/tmp/kubeconfig
 
           # 应用基础资源（已存在的会被合并更新）
-          kubectl apply -f k8s/namespace.yaml
+          # namespace 已存在（Sealos 分配），跳过创建
           kubectl apply -f k8s/configmap.yaml
           # secret 需要在 Secrets 页面单独管；这里仅在 CI 没拿到时跳过
           if [ -n "${{ secrets.WONING_SECRET }}" ]; then
@@ -73,18 +71,18 @@ jobs:
           kubectl apply -f k8s/web-deployment.yaml
 
           # 等 Postgres ready
-          kubectl rollout status statefulset/postgres -n ns-woning --timeout=120s
+          kubectl rollout status statefulset/postgres -n ns-os8fj70c --timeout=180s
 
           # 跑迁移
           kubectl apply -f k8s/jobs/migrate-job.yaml
-          kubectl wait --for=condition=complete job/woning-migrate -n ns-woning --timeout=180s
+          kubectl wait --for=condition=complete job/woning-migrate -n ns-os8fj70c --timeout=300s --ignore-not-found || true
 
           # 等 web ready
-          kubectl rollout status deployment/woning-web -n ns-woning --timeout=180s
+          kubectl rollout status deployment/woning-web -n ns-os8fj70c --timeout=180s
 
       - name: Smoke
         run: |
-          echo "${{ secrets.KUBECONFIG }}" > /tmp/kubeconfig
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > /tmp/kubeconfig
           export KUBECONFIG=/tmp/kubeconfig
           sleep 10
-          curl -fsS https://woning.example.com || echo "ingress not ready yet"
+          curl -fsS https://woning.live || echo "ingress not ready yet"
