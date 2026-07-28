@@ -37,8 +37,9 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
+          # 第一次跑没 cache，正常 work；后续会加速
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   migrate:
     needs: build
