@@ -36,7 +36,9 @@
       "Bash(kubectl logs *)",
       "Bash(git init *)",
       "Bash(git config *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git commit *)",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); r=d['workflow_runs'][0]; print\\(f'#{r[\\\\\"run_number\\\\\"]} {r[\\\\\"status\\\\\"]:8s} {r[\\\\\"conclusion\\\\\"]}'\\)\")"
     ]
   }
 }
