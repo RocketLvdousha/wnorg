@@ -35,7 +35,8 @@
       "Bash(kubectl delete *)",
       "Bash(kubectl logs *)",
       "Bash(git init *)",
-      "Bash(git config *)"
+      "Bash(git config *)",
+      "Bash(git push *)"
     ]
   }
 }
