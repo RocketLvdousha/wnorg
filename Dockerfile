@@ -17,6 +17,8 @@ RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
+# public 目录可能在 .dockerignore 中被忽略，确保空目录存在
+RUN mkdir -p ./public/uploads/images ./public/uploads/videos
 COPY . .
 
 # Next.js standalone 输出（仅依赖 + .next/standalone，不带 src）
@@ -48,8 +50,6 @@ RUN addgroup --system --gid 1001 nodejs \
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# 整块 node_modules 一并拷过去（含 effect 等隐式依赖），避免 standalone 漏文件
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 

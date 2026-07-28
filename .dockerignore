@@ -8,6 +8,7 @@ node_modules
 .screenshots
 .z-index
 devlog
+screenshots
 *.md
 !README.md
 !DEPLOY.md
@@ -27,3 +28,4 @@ yarn-error.log*
 .turbo
 coverage
 .eslintcache
+public/uploads
